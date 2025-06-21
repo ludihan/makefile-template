@@ -17,7 +17,7 @@ RES_PATH = res
 
 OUT_NATIVE = $(BIN_PATH)/$(BIN)
 
-DIRS = $(sort $(dir $(OBJS))) $(BIN_PATH)
+DIRS = $(sort $(basename $(dir $(OBJS)))) $(BIN_PATH)/
 
 WARNINGS =\
 	-Wall \
@@ -26,6 +26,7 @@ WARNINGS =\
 	-Wconversion
 
 LDLIBS =\
+	-lraylib
 
 RELEASE_FLAGS =\
 	-O3 \
