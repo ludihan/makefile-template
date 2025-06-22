@@ -1,4 +1,5 @@
 .PHONY: all run clean cleanall
+.DEFAULT_GOAL := all
 
 CC         ?= $(CC)
 ARGS       ?=
@@ -40,19 +41,23 @@ INCLUDE :=\
 	-Isrc \
 	-Ilib
 
-CFLAGS := $(WARNINGS) $(INCLUDE) $(FLAGS)
+CFLAGS   := $(WARNINGS) $(FLAGS)
+CPPFLAGS := -MMD -MP $(INCLUDE)
 
 ifeq ($(BUILD_TYPE), debug)
-	CFLAGS  += -g
-	CFLAGS  += -O0
-	CFLAGS  += -DDEBUG
-	LDFLAGS += -fsanitize=address
+	CFLAGS   += -g
+	CFLAGS   += -O0
+	CPPFLAGS += -DDEBUG
+	LDFLAGS  += -fsanitize=address
 endif
 
 ifeq ($(BUILD_TYPE), release)
-	CFLAGS  += -O3
-	CFLAGS  += -DNDEBUG
+	CFLAGS   += -O3
+	CPPFLAGS += -DNDEBUG
 endif
+
+
+-include $(OBJS:.o=.d)
 
 all: $(DIRS) $(OUT_NATIVE)
 
@@ -69,7 +74,7 @@ $(DIRS):
 	mkdir -p $@
 
 $(OUT_NATIVE): $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(LDLIBS) -o $@ $^
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) $(LDLIBS) -o $@ $^
 
 $(OBJ_PATH)/%.o: $(SRC_PATH)/%.c
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
