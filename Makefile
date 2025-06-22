@@ -1,8 +1,8 @@
 .PHONY: all run clean cleanall
 
 CC         ?= $(CC)
+ARGS       ?=
 BUILD_TYPE ?= default
-ARGS       ?= $(ARGS)
 
 ifneq ($(filter $(BUILD_TYPE), default debug release), $(BUILD_TYPE))
 $(error invalid BUILD_TYPE '$(BUILD_TYPE)'. \
@@ -69,7 +69,7 @@ $(DIRS):
 	mkdir -p $@
 
 $(OUT_NATIVE): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(LDLIBS) -o $@ $^
 
 $(OBJ_PATH)/%.o: $(SRC_PATH)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
