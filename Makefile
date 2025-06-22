@@ -1,58 +1,57 @@
-.PHONY: all run clean
+.PHONY: all run clean cleanall
 
-CC      := $(CC)
-DEBUG   ?= 0
-RELEASE ?= 0
+CC         ?= $(CC)
+BUILD_TYPE ?= default
+ARGS       ?= $(ARGS)
 
-BIN      = todo
-BIN_PATH = bin
+ifneq ($(filter $(BUILD_TYPE), default debug release), $(BUILD_TYPE))
+$(error invalid BUILD_TYPE '$(BUILD_TYPE)'. \
+	Must be one of: default, debug or release)
+endif
 
-SRC_PATH = src
-SRCS     = $(shell find $(SRC_PATH) -type f -name "*.c")
+BIN           := a.out
+BIN_ROOT_PATH := bin
+BIN_PATH      := $(BIN_ROOT_PATH)/$(BUILD_TYPE)
+OUT_NATIVE    := $(BIN_PATH)/$(BIN)
 
-OBJ_PATH = obj
-OBJS     = $(SRCS:$(SRC_PATH)/%.c=$(OBJ_PATH)/%.o)
+SRC_PATH      := src
+SRCS          := $(shell find $(SRC_PATH) -type f -name "*.c")
 
-RES_PATH = res
+OBJ_ROOT_PATH := obj
+OBJ_PATH      := $(OBJ_ROOT_PATH)/$(BUILD_TYPE)
+OBJS          := $(SRCS:$(SRC_PATH)/%.c=$(OBJ_PATH)/%.o)
 
-OUT_NATIVE = $(BIN_PATH)/$(BIN)
+DIRS := $(sort \
+	$(dir $(OBJS)) \
+	$(dir $(OUT_NATIVE)) \
+)
 
-DIRS =\
-	$(sort $(dir $(OBJS))) \
-	$(BIN_PATH)/
-
-WARNINGS =\
+WARNINGS :=\
 	-Wall \
 	-Wextra \
 	-Wpedantic \
 	-Wconversion
 
-LDLIBS =\
-	-lncurses
+LDLIBS  :=
+LDFLAGS :=
+FLAGS   :=
 
-FLAGS =\
-
-RELEASE_FLAGS =\
-	-O3 \
-	-DNDEBUG
-
-DEBUG_FLAGS =\
-	-g \
-	-O0 \
-	-DDEBUG
-
-INCLUDE =\
+INCLUDE :=\
 	-Isrc \
 	-Ilib
 
-CFLAGS = $(WARNINGS) $(INCLUDE) $(FLAGS)
+CFLAGS := $(WARNINGS) $(INCLUDE) $(FLAGS)
 
-ifeq ($(DEBUG), 1)
-	CFLAGS += $(DEBUG_FLAGS)
+ifeq ($(BUILD_TYPE), debug)
+	CFLAGS  += -g
+	CFLAGS  += -O0
+	CFLAGS  += -DDEBUG
+	LDFLAGS += -fsanitize=address
 endif
 
-ifeq ($(RELEASE), 1)
-	CFLAGS += $(RELEASE_FLAGS)
+ifeq ($(BUILD_TYPE), release)
+	CFLAGS  += -O3
+	CFLAGS  += -DNDEBUG
 endif
 
 all: $(DIRS) $(OUT_NATIVE)
@@ -63,11 +62,14 @@ run: all
 clean:
 	rm -rf $(BIN_PATH) $(OBJ_PATH)
 
+cleanall:
+	rm -rf $(BIN_ROOT_PATH) $(OBJ_ROOT_PATH)
+
 $(DIRS):
 	mkdir -p $@
 
 $(OUT_NATIVE): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS)
+	$(CC) $(CFLAGS) -o $@ $^ $(LDLIBS) $(LDFLAGS)
 
 $(OBJ_PATH)/%.o: $(SRC_PATH)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
