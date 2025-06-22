@@ -4,7 +4,7 @@ CC      := $(CC)
 DEBUG   ?= 0
 RELEASE ?= 0
 
-BIN      = magic
+BIN      = todo
 BIN_PATH = bin
 
 SRC_PATH = src
@@ -28,7 +28,9 @@ WARNINGS =\
 	-Wconversion
 
 LDLIBS =\
-	-lraylib
+	-lncurses
+
+FLAGS =\
 
 RELEASE_FLAGS =\
 	-O3 \
@@ -43,7 +45,7 @@ INCLUDE =\
 	-Isrc \
 	-Ilib
 
-CFLAGS = $(WARNINGS) $(INCLUDE)
+CFLAGS = $(WARNINGS) $(INCLUDE) $(FLAGS)
 
 ifeq ($(DEBUG), 1)
 	CFLAGS += $(DEBUG_FLAGS)
@@ -56,7 +58,7 @@ endif
 all: $(DIRS) $(OUT_NATIVE)
 
 run: all
-	./$(OUT_NATIVE)
+	./$(OUT_NATIVE) $(ARGS)
 
 clean:
 	rm -rf $(BIN_PATH) $(OBJ_PATH)
